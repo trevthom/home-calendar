@@ -354,3 +354,25 @@ development:
   `(visible, overflow)` pairs
 
 If you add something non-trivial, write a similar test before declaring done.
+
+**Mobile UI verification:** `scripts/verify-mobile.mjs` (Playwright,
+devDependency) drives headless Chromium against a running preview and
+asserts the mobile contract end-to-end:
+
+- no page scrolling, body `overflow: hidden`, app exactly fills the
+  visual viewport (`100dvh`), `overscroll-behavior: none`;
+- all four month/year arrows on one row inside the screen, close to the
+  month/year text;
+- today's date box top-right, slightly rounded, showing today's number;
+- desktop regression pass (same checks, desktop-tolerant thresholds);
+- interaction pass: month navigation + drawer open/close keep the
+  header correct.
+
+Run it with:
+
+```bash
+PREVIEW_URL=http://127.0.0.1:8765 node scripts/verify-mobile.mjs
+# first time: bun add -d playwright && bun x playwright install chromium
+```
+
+Exits non-zero if any check fails. Screenshots land in `/tmp/calendar-mobile-*.png`.

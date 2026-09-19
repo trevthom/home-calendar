@@ -17,11 +17,32 @@
 .cal-header__nav {
   display: flex;
   align-items: baseline;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
 }
 
-/* col 3 — invisible spacer, mirrors col 1 width so col 2 sits dead-center */
-.cal-header__balance { width: 36px; height: 1px; }
+/* col 3 — today's date badge, boxed with slightly rounded corners */
+.cal-header__balance {
+  display: flex;
+  align-items: center;          /* keep the badge on the title's row */
+  justify-content: flex-end;
+}
+
+.cal-header__today {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
 
 .cal-header__title {
   font-family: var(--font-display);
@@ -64,6 +85,45 @@
   background: var(--surface-2);
 }
 .nav-btn--year { font-size: 13px; }
+
+/* ===== Mobile header: everything on one phone-width row =====
+ * Hamburger · ‹⟪ Month Year ⟫› · boxed today-date must all be visible
+ * without horizontal scrolling on a phone. */
+@media (max-width: 700px) {
+  .cal-header {
+    grid-template-columns: auto auto 1fr;
+    gap: var(--sp-2);
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-2);
+  }
+  .cal-header > .hamburger { justify-self: end; }
+  .hamburger { width: 30px; height: 30px; }
+
+  .cal-header__nav { gap: var(--sp-1); }
+
+  .cal-header__title {
+    min-width: 0;
+    font-size: clamp(24px, 6.5vw, 32px);
+    gap: 0.35em;
+  }
+  .cal-header__month { white-space: nowrap; }
+
+  .nav-btn { width: 26px; height: 26px; font-size: 13px; }
+  .nav-btn--year { font-size: 11px; }
+
+  .cal-header__today { width: 28px; height: 28px; font-size: 13px; }
+}
+
+/* Extra-tight phones (320–360px): trim title/arrows a bit more so the
+ * year arrows never get pushed out of view. */
+@media (max-width: 360px) {
+  .cal-header__title { font-size: clamp(21px, 6.2vw, 26px); }
+  .cal-header__nav { gap: 2px; }
+  .nav-btn { width: 22px; height: 22px; font-size: 12px; }
+  .nav-btn--year { font-size: 10px; }
+  .hamburger { width: 28px; height: 28px; }
+  .cal-header__today { width: 26px; height: 26px; font-size: 12px; }
+}
 
 /* ===== Day-of-week strip ===== */
 

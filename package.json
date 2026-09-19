@@ -4,7 +4,15 @@
   "private": true,
   "type": "module",
   "description": "Shared two-person calendar — Vercel deployment with passcode auth and Upstash Redis storage.",
+  "scripts": {
+    "build": "python3 build.py",
+    "serve": "python3 server.py",
+    "verify:mobile": "node scripts/verify-mobile.mjs"
+  },
   "dependencies": {
     "@upstash/redis": "^1.38.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
   }
 }
