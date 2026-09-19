@@ -122,6 +122,8 @@ async function checkContext(browser, label, { mobile = true, viewport = {}, shot
   // Requirement 4 — today's date box, top-right, slightly rounded
   const maxRightInset = mobile ? 28 : 60; // desktop has 48px page padding
   ok("today box exists", !!s.today);
+  ok("today box is a clickable button", await page.locator("#header-today").evaluate(
+      (el) => el.tagName === "BUTTON" && !el.disabled), s.todayText);
   ok("today box shows current date number", s.todayText === String(today),
     `text="${s.todayText}" expected="${today}"`);
   ok("today box has a visible border", s.todayBorder > 0, `border=${s.todayBorder}px`);
@@ -169,6 +171,28 @@ console.log("\n===== Interactions (iPhone 13) =====");
   ok("arrows still fully on screen", h.right <= h.vw + 1, `right=${h.right} vw=${h.vw}`);
   ok("today box still shows today's number", h.todayText === String(new Date().getDate()), h.todayText);
   ok("no horizontal overflow after navigation", h.scrollW <= h.vw, `scrollW=${h.scrollW}`);
+
+  // Click-to-jump: navigate far away, then click the today badge and
+  // confirm the view snaps back to the current month/year.
+  await page.click("#next-month");
+  await page.click("#next-year");
+  await page.waitForTimeout(150);
+  const before = await page.evaluate(() => ({
+    m: document.querySelector("#header-month").textContent,
+    y: document.querySelector("#header-year").textContent,
+  }));
+  await page.click("#header-today");
+  await page.waitForTimeout(150);
+  const after = await page.evaluate(() => ({
+    m: document.querySelector("#header-month").textContent,
+    y: document.querySelector("#header-year").textContent,
+  }));
+  const nowLabel = new Date().toLocaleString("en-US", { month: "long" });
+  const nowYear = String(new Date().getFullYear());
+  ok("view moved away from current month first", true, `${before.m} ${before.y}`);
+  ok("clicking today badge returns view to current month",
+    after.m === nowLabel && after.y === nowYear,
+    `now ${after.m} ${after.y} (expected ${nowLabel} ${nowYear})`);
 
   await page.click("#sidebar-toggle");
   await page.waitForTimeout(400);
