@@ -363,10 +363,11 @@ asserts the mobile contract end-to-end:
   visual viewport (`100dvh`), `overscroll-behavior: none`;
 - all four month/year arrows on one row inside the screen, close to the
   month/year text;
-- today's date box top-right, slightly rounded, showing today's number;
+- today's date box top-right, slightly rounded, showing today's number,
+  and clickable — clicking it jumps the view back to the current month;
 - desktop regression pass (same checks, desktop-tolerant thresholds);
-- interaction pass: month navigation + drawer open/close keep the
-  header correct.
+- interaction pass: month navigation + drawer open/close + today-badge
+  click-to-jump keep the header correct.
 
 Run it with:
 
@@ -376,3 +377,24 @@ PREVIEW_URL=http://127.0.0.1:8765 node scripts/verify-mobile.mjs
 ```
 
 Exits non-zero if any check fails. Screenshots land in `/tmp/calendar-mobile-*.png`.
+Equivalent: `npm run verify:mobile` (same script via package.json).
+
+## Mobile viewport contract (2026-09)
+
+The phone experience is a fixed, non-scrolling app surface. This was a
+deliberate feature set — don't regress it when touching layout:
+
+- **No page scrolling.** `reset.css` sets `body { overflow: hidden }` and
+  `overscroll-behavior: none` on html/body; `.app` is `100dvh` (with a
+  `100vh` fallback). Everything that scrolls (modals, day-modal list,
+  drawer) scrolls INTERNALLY. If you add a surface that needs to scroll,
+  make that element scroll — never re-enable body scroll.
+- **Header fits one phone row.** Media queries at 700px and 360px shrink
+  the title, nav buttons, and hamburger so all four month/year arrows stay
+  inside the screen; gaps around the month/year text are tight on purpose.
+- **Today badge.** `.cal-header__today` (#header-today) is a BUTTON in the
+  header's right column: boxed, slightly rounded, shows today's date
+  number (rendered in grid.js), and clicking it calls
+  `setView(current year, current month)`. It has hover/active affordances.
+- Modals use `dvh` fallbacks for max-height — keep them if you touch
+  modal.css, or tall dialogs will be unreachable under the body lock.
