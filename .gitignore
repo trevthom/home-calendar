@@ -1,0 +1,8 @@
+# Dependencies (Playwright is a devDependency used by scripts/verify-mobile.mjs)
+node_modules/
+
+# Desktop server's runtime database (see HANDOFF.md)
+data/*.tmp
+
+# OS / editor noise
+.DS_Store

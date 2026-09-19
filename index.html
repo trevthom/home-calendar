@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -107,7 +107,9 @@
           <button class="nav-btn nav-btn--month" id="next-month" aria-label="Next month">›</button>
           <button class="nav-btn nav-btn--year" id="next-year" aria-label="Next year">⟫</button>
         </div>
-        <div class="cal-header__balance" aria-hidden="true"></div>
+        <div class="cal-header__balance">
+          <div class="cal-header__today" id="header-today" aria-label="Today's date"></div>
+        </div>
       </header>
 
       <div class="dow-row" id="dow-row"></div>

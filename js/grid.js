@@ -19,6 +19,10 @@ function renderGridHeader() {
   const { ui } = getState();
   $("#header-month").textContent = MONTHS[ui.month];
   $("#header-year").textContent  = ui.year;
+
+  // Header badge (top-right): today's date number.
+  const todayBadge = $("#header-today");
+  if (todayBadge) todayBadge.textContent = String(new Date().getDate());
 }
 
 function renderDowRow() {

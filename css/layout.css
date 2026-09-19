@@ -7,7 +7,13 @@
  */
 
 .app {
+  /* 100dvh tracks the *visual* viewport on mobile browsers (excludes the
+   * URL bar); 100vh is the fallback for older engines. Combined with
+   * overflow: hidden + overscroll-behavior: none (reset.css), the app never
+   * scrolls, so mobile Chrome/Safari have nothing to drag the bar in for. */
   height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background:
     radial-gradient(1200px 800px at 80% -10%, var(--bg-grain) 0%, transparent 60%),
     var(--bg);
@@ -16,7 +22,7 @@
 
 .main {
   padding: var(--sp-6) var(--sp-7);
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -24,7 +30,7 @@
 }
 
 @media (max-width: 700px) {
-  .main { padding: var(--sp-4) var(--sp-4) var(--sp-3); }
+  .main { padding: var(--sp-3) var(--sp-3) var(--sp-2); }
 }
 
 /* ---------- Sidebar drawer ---------- */

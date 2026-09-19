@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -115,6 +115,12 @@
 
 html, body { height: 100%; }
 
+/* The app is a fixed viewport surface: no page scrolling and no
+ * pull-to-refresh. Phones therefore have zero reason to scroll, which is
+ * what lets mobile browsers keep the address bar hidden. Modals and lists
+ * scroll internally, never the page. */
+html, body { overscroll-behavior: none; }
+
 body {
   font-family: var(--font-body);
   font-size: 14px;
@@ -123,6 +129,7 @@ body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow: hidden;
 }
 
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
@@ -147,7 +154,13 @@ h1, h2, h3, h4 { font-weight: 500; }
  */
 
 .app {
+  /* 100dvh tracks the *visual* viewport on mobile browsers (excludes the
+   * URL bar); 100vh is the fallback for older engines. Combined with
+   * overflow: hidden + overscroll-behavior: none (reset.css), the app never
+   * scrolls, so mobile Chrome/Safari have nothing to drag the bar in for. */
   height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background:
     radial-gradient(1200px 800px at 80% -10%, var(--bg-grain) 0%, transparent 60%),
     var(--bg);
@@ -156,7 +169,7 @@ h1, h2, h3, h4 { font-weight: 500; }
 
 .main {
   padding: var(--sp-6) var(--sp-7);
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -164,7 +177,7 @@ h1, h2, h3, h4 { font-weight: 500; }
 }
 
 @media (max-width: 700px) {
-  .main { padding: var(--sp-4) var(--sp-4) var(--sp-3); }
+  .main { padding: var(--sp-3) var(--sp-3) var(--sp-2); }
 }
 
 /* ---------- Sidebar drawer ---------- */
@@ -457,11 +470,32 @@ h1, h2, h3, h4 { font-weight: 500; }
 .cal-header__nav {
   display: flex;
   align-items: baseline;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
 }
 
-/* col 3 — invisible spacer, mirrors col 1 width so col 2 sits dead-center */
-.cal-header__balance { width: 36px; height: 1px; }
+/* col 3 — today's date badge, boxed with slightly rounded corners */
+.cal-header__balance {
+  display: flex;
+  align-items: center;          /* keep the badge on the title's row */
+  justify-content: flex-end;
+}
+
+.cal-header__today {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
 
 .cal-header__title {
   font-family: var(--font-display);
@@ -504,6 +538,45 @@ h1, h2, h3, h4 { font-weight: 500; }
   background: var(--surface-2);
 }
 .nav-btn--year { font-size: 13px; }
+
+/* ===== Mobile header: everything on one phone-width row =====
+ * Hamburger · ‹⟪ Month Year ⟫› · boxed today-date must all be visible
+ * without horizontal scrolling on a phone. */
+@media (max-width: 700px) {
+  .cal-header {
+    grid-template-columns: auto auto 1fr;
+    gap: var(--sp-2);
+    padding-bottom: var(--sp-3);
+    margin-bottom: var(--sp-2);
+  }
+  .cal-header > .hamburger { justify-self: end; }
+  .hamburger { width: 30px; height: 30px; }
+
+  .cal-header__nav { gap: var(--sp-1); }
+
+  .cal-header__title {
+    min-width: 0;
+    font-size: clamp(24px, 6.5vw, 32px);
+    gap: 0.35em;
+  }
+  .cal-header__month { white-space: nowrap; }
+
+  .nav-btn { width: 26px; height: 26px; font-size: 13px; }
+  .nav-btn--year { font-size: 11px; }
+
+  .cal-header__today { width: 28px; height: 28px; font-size: 13px; }
+}
+
+/* Extra-tight phones (320–360px): trim title/arrows a bit more so the
+ * year arrows never get pushed out of view. */
+@media (max-width: 360px) {
+  .cal-header__title { font-size: clamp(21px, 6.2vw, 26px); }
+  .cal-header__nav { gap: 2px; }
+  .nav-btn { width: 22px; height: 22px; font-size: 12px; }
+  .nav-btn--year { font-size: 10px; }
+  .hamburger { width: 28px; height: 28px; }
+  .cal-header__today { width: 26px; height: 26px; font-size: 12px; }
+}
 
 /* ===== Day-of-week strip ===== */
 
@@ -997,6 +1070,7 @@ h1, h2, h3, h4 { font-weight: 500; }
   position: relative;
   width: min(520px, 100%);
   max-height: 90vh;
+  max-height: 90dvh; /* track the visual viewport on phones (URL bar state) */
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--surface);
@@ -1257,6 +1331,7 @@ h1, h2, h3, h4 { font-weight: 500; }
   flex-direction: column;
   gap: var(--sp-1);
   max-height: 50vh;
+  max-height: 50dvh;
   overflow-y: auto;
   overflow-x: hidden;
   min-width: 0;
@@ -1518,7 +1593,9 @@ h1, h2, h3, h4 { font-weight: 500; }
           <button class="nav-btn nav-btn--month" id="next-month" aria-label="Next month">›</button>
           <button class="nav-btn nav-btn--year" id="next-year" aria-label="Next year">⟫</button>
         </div>
-        <div class="cal-header__balance" aria-hidden="true"></div>
+        <div class="cal-header__balance">
+          <div class="cal-header__today" id="header-today" aria-label="Today's date"></div>
+        </div>
       </header>
 
       <div class="dow-row" id="dow-row"></div>
@@ -3139,6 +3216,10 @@ function renderGridHeader() {
   const { ui } = getState();
   $("#header-month").textContent = MONTHS[ui.month];
   $("#header-year").textContent  = ui.year;
+
+  // Header badge (top-right): today's date number.
+  const todayBadge = $("#header-today");
+  if (todayBadge) todayBadge.textContent = String(new Date().getDate());
 }
 
 function renderDowRow() {

@@ -4,6 +4,12 @@
 
 html, body { height: 100%; }
 
+/* The app is a fixed viewport surface: no page scrolling and no
+ * pull-to-refresh. Phones therefore have zero reason to scroll, which is
+ * what lets mobile browsers keep the address bar hidden. Modals and lists
+ * scroll internally, never the page. */
+html, body { overscroll-behavior: none; }
+
 body {
   font-family: var(--font-body);
   font-size: 14px;
@@ -12,6 +18,7 @@ body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow: hidden;
 }
 
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
