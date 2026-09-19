@@ -473,12 +473,24 @@ h1, h2, h3, h4 { font-weight: 500; }
   gap: var(--sp-2);
 }
 
-/* col 3 — today's date badge, boxed with slightly rounded corners */
+/* col 3 — today's date badge: a button that jumps back to the current
+ * month, boxed with slightly rounded corners */
 .cal-header__balance {
   display: flex;
   align-items: center;          /* keep the badge on the title's row */
   justify-content: flex-end;
 }
+
+.cal-header__today {
+  cursor: pointer;
+  transition: background 160ms var(--ease), border-color 160ms var(--ease),
+              transform 120ms var(--ease);
+}
+.cal-header__today:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.cal-header__today:active { transform: scale(0.94); }
 
 .cal-header__today {
   font-family: var(--font-display);
@@ -1594,7 +1606,7 @@ h1, h2, h3, h4 { font-weight: 500; }
           <button class="nav-btn nav-btn--year" id="next-year" aria-label="Next year">⟫</button>
         </div>
         <div class="cal-header__balance">
-          <div class="cal-header__today" id="header-today" aria-label="Today's date"></div>
+          <button type="button" class="cal-header__today" id="header-today" title="Jump to today" aria-label="Jump to today's date"></button>
         </div>
       </header>
 
@@ -3338,6 +3350,12 @@ function initGrid() {
   $("#next-year").addEventListener("click", () => {
     const { ui } = getState();
     setView(ui.year + 1, ui.month);
+  });
+  // Clicking the boxed today-date in the header snaps the view back to the
+  // current month.
+  $("#header-today").addEventListener("click", () => {
+    const now = new Date();
+    setView(now.getFullYear(), now.getMonth());
   });
 
   renderDowRow();

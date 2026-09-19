@@ -142,6 +142,12 @@ export function initGrid() {
     const { ui } = getState();
     setView(ui.year + 1, ui.month);
   });
+  // Clicking the boxed today-date in the header snaps the view back to the
+  // current month.
+  $("#header-today").addEventListener("click", () => {
+    const now = new Date();
+    setView(now.getFullYear(), now.getMonth());
+  });
 
   renderDowRow();
   renderGridHeader();
