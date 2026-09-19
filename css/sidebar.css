@@ -1,0 +1,181 @@
+/* ===== Sidebar ===== */
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--sp-5) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  overflow-y: auto;
+  transition: background-color 280ms var(--ease), border-color 280ms var(--ease);
+}
+
+/* Top button row: theme + export + import */
+.sidebar__top {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--text-soft);
+  transition: all 180ms var(--ease);
+  position: relative;
+}
+
+/* Theme toggle button gets larger sun/moon glyphs */
+.icon-btn--theme { font-size: 22px; line-height: 1; }
+
+/* Logout sits apart, pushed to the far right of the row */
+.icon-btn--logout { margin-left: auto; font-size: 18px; }
+.icon-btn--logout:hover {
+  color: var(--danger, #c0392b);
+  border-color: var(--danger, #c0392b);
+}
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+.icon-btn:active { transform: scale(0.96); }
+
+/* Theme icons swap based on data-theme */
+.icon-sun, .icon-moon {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 240ms var(--ease), transform 240ms var(--ease);
+}
+[data-theme="light"] .icon-sun { opacity: 1; transform: rotate(0); }
+[data-theme="light"] .icon-moon { opacity: 0; transform: rotate(-90deg); }
+[data-theme="dark"]  .icon-sun { opacity: 0; transform: rotate(90deg); }
+[data-theme="dark"]  .icon-moon { opacity: 1; transform: rotate(0); }
+
+/* ===== Calendar list (collapsible) ===== */
+
+/* The header is now a row containing the toggle button and the add button */
+.cal-list__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-1);
+}
+.cal-list__header:hover { background: var(--surface-2); }
+
+.cal-list__toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-style: italic;
+  color: var(--text);
+  font-weight: 400;
+  text-align: left;
+  padding: var(--sp-1) 0;
+}
+
+.cal-list__chev {
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform 220ms var(--ease);
+  display: inline-block;
+}
+.cal-list[data-collapsed="true"] .cal-list__chev { transform: rotate(-90deg); }
+
+.cal-list__title { flex: 1; }
+
+.cal-list__add {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 160ms var(--ease);
+  flex-shrink: 0;
+}
+.cal-list__add:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.cal-list__items {
+  margin-top: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  transition: max-height 280ms var(--ease), opacity 200ms var(--ease);
+  max-height: 1000px;
+  opacity: 1;
+}
+.cal-list[data-collapsed="true"] .cal-list__items {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+}
+
+.cal-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-1);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+}
+.cal-item:hover { background: var(--surface-2); }
+
+.cal-item__check {
+  width: 14px; height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid var(--cal-color, var(--muted));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 160ms var(--ease);
+}
+.cal-item[data-checked="true"] .cal-item__check {
+  background: var(--cal-color, var(--accent));
+}
+.cal-item[data-checked="true"] .cal-item__check::after {
+  content: "✓";
+  color: var(--surface);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cal-item__name { flex: 1; color: var(--text-soft); }
+.cal-item[data-checked="true"] .cal-item__name { color: var(--text); }
+
+.cal-item__delete {
+  opacity: 0;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 0 var(--sp-1);
+  transition: opacity 160ms var(--ease), color 160ms var(--ease);
+}
+.cal-item:hover .cal-item__delete { opacity: 1; }
+.cal-item__delete:hover { color: var(--accent); }

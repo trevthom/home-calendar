@@ -1,0 +1,115 @@
+/* ===== Upcoming events panel ===== */
+
+.upcoming {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+}
+
+/* Header row containing the collapse toggle */
+.upcoming__header {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  padding: var(--sp-1);
+}
+.upcoming__header:hover { background: var(--surface-2); }
+
+.upcoming__toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-style: italic;
+  color: var(--text);
+  font-weight: 400;
+  text-align: left;
+  padding: var(--sp-1) 0;
+}
+
+.upcoming__chev {
+  font-size: 11px;
+  color: var(--muted);
+  transition: transform 220ms var(--ease);
+  display: inline-block;
+}
+.upcoming[data-collapsed="true"] .upcoming__chev { transform: rotate(-90deg); }
+
+.upcoming__title { flex: 1; }
+
+.upcoming__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  transition: max-height 280ms var(--ease), opacity 200ms var(--ease), margin-top 220ms var(--ease);
+  max-height: 1200px;
+  opacity: 1;
+}
+.upcoming[data-collapsed="true"] .upcoming__list {
+  max-height: 0;
+  opacity: 0;
+}
+
+.upcoming__empty {
+  font-size: 12px;
+  color: var(--muted);
+  padding: var(--sp-3) var(--sp-1);
+  font-style: italic;
+}
+
+.up-item {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: var(--sp-3);
+  align-items: center;
+  padding: var(--sp-2) var(--sp-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border-left: 2px solid var(--up-color, var(--accent));
+  transition: background 160ms var(--ease);
+}
+.up-item:hover { background: var(--surface-2); }
+
+.up-item__date {
+  text-align: center;
+  font-feature-settings: "tnum";
+}
+.up-item__day {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--text);
+}
+.up-item__mon {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.up-item__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.up-item__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.up-item__meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-feature-settings: "tnum";
+}

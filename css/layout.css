@@ -1,0 +1,111 @@
+/* App shell layout.
+ *
+ * Main fills the viewport. The sidebar is a fixed, full-height drawer that
+ * slides in from the left on both desktop and mobile (toggled by the
+ * hamburger in cal-header). A semi-transparent backdrop covers the rest of
+ * the screen while the drawer is open, click-to-close.
+ */
+
+.app {
+  height: 100vh;
+  background:
+    radial-gradient(1200px 800px at 80% -10%, var(--bg-grain) 0%, transparent 60%),
+    var(--bg);
+  transition: background-color 280ms var(--ease);
+}
+
+.main {
+  padding: var(--sp-6) var(--sp-7);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (max-width: 700px) {
+  .main { padding: var(--sp-4) var(--sp-4) var(--sp-3); }
+}
+
+/* ---------- Sidebar drawer ---------- */
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;                          /* top:0 right:auto bottom:0 left:0 */
+  width: min(320px, 88vw);
+  z-index: 60;
+  transform: translateX(-100%);
+  transition: transform 320ms var(--ease), box-shadow 320ms var(--ease);
+  will-change: transform;
+  box-shadow: none;
+}
+.sidebar[data-open="true"] {
+  transform: translateX(0);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---------- Drawer backdrop ---------- */
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.42);
+  opacity: 0;
+  transition: opacity 280ms var(--ease);
+  pointer-events: none;
+}
+.sidebar-backdrop[data-open="true"] {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* When [hidden] is removed the backdrop is in the DOM but invisible until
+ * data-open flips. Override the [hidden] !important rule from reset.css. */
+.sidebar-backdrop[hidden] { display: none !important; }
+
+/* ---------- Hamburger button ---------- */
+
+.hamburger {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: background 160ms var(--ease),
+              border-color 160ms var(--ease),
+              transform 160ms var(--ease);
+  flex-shrink: 0;
+}
+.hamburger:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+.hamburger:active { transform: scale(0.96); }
+
+.hamburger__bar {
+  display: block;
+  width: 16px;
+  height: 1.5px;
+  background: var(--text-soft);
+  border-radius: 2px;
+  transition: transform 220ms var(--ease),
+              opacity 180ms var(--ease);
+}
+
+/* Morph hamburger → X when the drawer is open. The button's
+ * aria-expanded attribute is the source of truth (set by sidebar.js). */
+.hamburger[aria-expanded="true"] .hamburger__bar:nth-child(1) {
+  transform: translateY(5.5px) rotate(45deg);
+}
+.hamburger[aria-expanded="true"] .hamburger__bar:nth-child(2) {
+  opacity: 0;
+}
+.hamburger[aria-expanded="true"] .hamburger__bar:nth-child(3) {
+  transform: translateY(-5.5px) rotate(-45deg);
+}

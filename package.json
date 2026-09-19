@@ -1,0 +1,10 @@
+{
+  "name": "home-calendar",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared two-person calendar — Vercel deployment with passcode auth and Upstash Redis storage.",
+  "dependencies": {
+    "@upstash/redis": "^1.38.2"
+  }
+}

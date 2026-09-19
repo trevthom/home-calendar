@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<title>Calendar</title>
+<style>
+/* TV view — NO CSS custom properties, NO grid, NO flex gap, NO color-mix.
+   Old TV browsers (LG NetCast / early webOS) drop any declaration they
+   don't understand, so everything here sticks to CSS ~2.1-era features:
+   tables, floats, borders, plain colors. Palette hardcoded from
+   variables.css (light theme). */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #f5f1e8;
+  color: #1a1814;
+  font-family: Georgia, "Times New Roman", serif;
+  height: 100%;
+  overflow: hidden;
+}
+
+#wrap { padding: 18px 24px 14px; height: 100%; box-sizing: border-box; }
+
+/* ---- header (inside leftcol, spans calendar width only) ---- */
+#hdr { width: 100%; margin-bottom: 8px; }
+#hdr td { vertical-align: baseline; }
+#title {
+  font-size: 46px;
+  font-style: italic;
+  color: #1a1814;
+}
+#title .yr { color: #8a8275; font-style: normal; font-size: 36px; }
+#clock {
+  text-align: right;
+  font-size: 28px;
+  color: #4d463a;
+  font-family: Arial, Helvetica, sans-serif;
+}
+#clock .dt { font-size: 16px; color: #8a8275; }
+
+/* ---- two-column shell: calendar left, lists right ---- */
+#shell { width: 100%; border-collapse: collapse; }
+#shell > tbody > tr > td { vertical-align: top; }
+#leftcol  { width: 74%; padding-right: 22px; }
+#rightcol { width: 26%; }
+
+/* ---- month grid ---- */
+#cal {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fffbf2;
+  border: 1px solid #c9bfa9;
+}
+#cal th {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: #8a8275;
+  font-weight: normal;
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd5c5;
+  background-color: #f2ecdd;
+}
+#cal td {
+  border: 1px solid #ddd5c5;
+  width: 14.28%;
+  height: 66px;
+  vertical-align: top;
+  padding: 5px 6px;
+  background-color: #fffbf2;
+}
+#cal td.other { background-color: #efeadd; }
+#cal td.today { background-color: #f6ddd6; border: 2px solid #c84a31; }
+.dnum {
+  font-size: 20px;
+  color: #1a1814;
+  font-family: Georgia, serif;
+}
+td.other .dnum { color: #a89f8e; }
+td.today .dnum { color: #c84a31; font-weight: bold; }
+
+/* event chips: block elements with a colored left border */
+.chip {
+  display: block;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  line-height: 18px;
+  color: #1a1814;
+  background-color: #f2ecdd;
+  border-left: 4px solid #c84a31;
+  padding: 2px 4px;
+  margin-top: 3px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.chip .t { color: #8a8275; font-size: 12px; }
+.more {
+  display: block;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  color: #8a8275;
+  margin-top: 3px;
+}
+
+/* ---- right column panels ---- */
+.panel {
+  background-color: #fffbf2;
+  border: 1px solid #c9bfa9;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+}
+.panel h2 {
+  margin: 0 0 6px 0;
+  font-size: 22px;
+  font-style: italic;
+  font-weight: normal;
+  color: #1a1814;
+  border-bottom: 1px solid #ddd5c5;
+  padding-bottom: 4px;
+}
+.cditem { margin: 0 0 6px 0; }
+.cdnum {
+  float: left;
+  width: 48px;
+  text-align: center;
+  font-size: 26px;
+  color: #c84a31;
+  font-family: Georgia, serif;
+  line-height: 28px;
+}
+.cdunit {
+  float: left;
+  clear: left;
+  width: 48px;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #8a8275;
+  text-transform: uppercase;
+}
+.cdbody { margin-left: 56px; }
+.cdtitle {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  color: #1a1814;
+}
+.cdwhen {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  color: #8a8275;
+}
+.clearfix { clear: both; height: 0; line-height: 0; }
+
+.upitem {
+  border-left: 4px solid #c84a31;
+  padding: 3px 8px;
+  margin-bottom: 8px;
+}
+.update {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #8a8275;
+  text-transform: uppercase;
+}
+.uptitle {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 17px;
+  color: #1a1814;
+}
+.empty {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  color: #8a8275;
+  font-style: italic;
+}
+#err {
+  display: none;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  color: #c84a31;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <table id="shell"><tbody><tr>
+    <td id="leftcol">
+      <table id="hdr"><tbody><tr>
+        <td><span id="title">Calendar</span></td>
+        <td id="clock"></td>
+      </tr></tbody></table>
+      <table id="cal"><thead><tr>
+        <th>SUN</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th>
+      </tr></thead><tbody id="calbody"></tbody></table>
+      <div id="err">Can't reach the calendar server. Retrying…</div>
+    </td>
+    <td id="rightcol">
+      <div class="panel">
+        <h2>Countdown</h2>
+        <div id="cdlist"><span class="empty">No countdowns</span></div>
+      </div>
+      <div class="panel">
+        <h2>Upcoming</h2>
+        <div id="uplist"><span class="empty">No upcoming events</span></div>
+      </div>
+    </td>
+  </tr></tbody></table>
+</div>
+
+<script>
+/* ES5 ONLY. No arrow functions, no let/const, no template literals, no
+   spread, no fetch, no optional chaining, no classList. Targets old LG TV
+   browsers (NetCast / early webOS, roughly Safari-5-era WebKit). */
+
+var MONTHS = ["January","February","March","April","May","June",
+              "July","August","September","October","November","December"];
+var DAYMS = 86400000;
+
+var gState = { calendars: [], events: [], version: -1 };
+
+/* ---------- date helpers (manual parsing: old WebKit mis-parses
+   "YYYY-MM-DD" strings, so never hand those to new Date()) ---------- */
+
+function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+
+function toKey(d) {
+  return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+}
+
+function fromKey(key) {
+  var p = key.split("-");
+  return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+}
+
+function today0() {
+  var d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function dayDiff(a, b) { /* whole days from a to b */
+  return Math.round((b.getTime() - a.getTime()) / DAYMS);
+}
+
+/* ---------- recurrence (ES5 port of events.js eventOccursOn) ---------- */
+
+function occursOn(ev, key) {
+  if (ev.exdates) {
+    for (var i = 0; i < ev.exdates.length; i++) {
+      if (ev.exdates[i] === key) return false;
+    }
+  }
+  if (!ev.repeat || ev.repeat === "none") return ev.date === key;
+
+  var base = fromKey(ev.date);
+  var target = fromKey(key);
+  if (target.getTime() < base.getTime()) return false;
+
+  var diff = dayDiff(base, target);
+  var idx = -1;
+  if (ev.repeat === "weekly"   && diff % 7 === 0)  idx = diff / 7;
+  if (ev.repeat === "biweekly" && diff % 14 === 0) idx = diff / 14;
+  if (ev.repeat === "monthly"  && target.getDate() === base.getDate()) {
+    idx = (target.getFullYear() - base.getFullYear()) * 12
+        + (target.getMonth() - base.getMonth());
+  }
+  if (ev.repeat === "yearly" && target.getDate() === base.getDate()
+      && target.getMonth() === base.getMonth()) {
+    idx = target.getFullYear() - base.getFullYear();
+  }
+  if (idx < 0) return false;
+  if (ev.repeatCount && ev.repeatCount > 0 && idx >= ev.repeatCount) return false;
+  return true;
+}
+
+function calColor(ev) {
+  if (ev.color) return ev.color;
+  for (var i = 0; i < gState.calendars.length; i++) {
+    if (gState.calendars[i].id === ev.calendarId) return gState.calendars[i].color;
+  }
+  return "#c84a31";
+}
+
+function calVisible(ev) {
+  for (var i = 0; i < gState.calendars.length; i++) {
+    if (gState.calendars[i].id === ev.calendarId) {
+      return gState.calendars[i].visible !== false;
+    }
+  }
+  return true;
+}
+
+function eventsOn(key) {
+  var out = [];
+  for (var i = 0; i < gState.events.length; i++) {
+    var ev = gState.events[i];
+    if (calVisible(ev) && occursOn(ev, key)) out.push(ev);
+  }
+  out.sort(function (a, b) {
+    var ta = a.allDay ? "" : (a.startTime || "99:99");
+    var tb = b.allDay ? "" : (b.startTime || "99:99");
+    return ta < tb ? -1 : ta > tb ? 1 : 0;
+  });
+  return out;
+}
+
+function esc(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;");
+}
+
+function fmtTime(t) { /* "14:30" -> "2:30p", "09:00" -> "9a" */
+  if (!t) return "";
+  var p = t.split(":");
+  var h = parseInt(p[0], 10);
+  var m = p[1];
+  var ap = h >= 12 ? "p" : "a";
+  h = h % 12; if (h === 0) h = 12;
+  return h + (m === "00" ? "" : ":" + m) + ap;
+}
+
+/* ---------- render: month grid ---------- */
+
+function renderMonth() {
+  var now = today0();
+  var year = now.getFullYear(), month = now.getMonth();
+  var todayKey = toKey(now);
+
+  document.getElementById("title").innerHTML =
+    esc(MONTHS[month]) + ' <span class="yr">' + year + "</span>";
+
+  var first = new Date(year, month, 1);
+  var start = new Date(year, month, 1 - first.getDay()); /* back to Sunday */
+
+  var html = "";
+  var cursor = new Date(start.getTime());
+  for (var row = 0; row < 6; row++) {
+    html += "<tr>";
+    for (var col = 0; col < 7; col++) {
+      var key = toKey(cursor);
+      var cls = "";
+      if (cursor.getMonth() !== month) cls = "other";
+      if (key === todayKey) cls = "today";
+      html += '<td class="' + cls + '"><span class="dnum">' +
+              cursor.getDate() + "</span>";
+
+      var evs = eventsOn(key);
+      var show = evs.length > 3 ? 2 : evs.length;
+      for (var e = 0; e < show; e++) {
+        var ev = evs[e];
+        var time = ev.allDay ? "" :
+          '<span class="t">' + esc(fmtTime(ev.startTime)) + " </span>";
+        html += '<span class="chip" style="border-left-color:' +
+                esc(calColor(ev)) + '">' + time + esc(ev.title || "(untitled)") +
+                "</span>";
+      }
+      if (evs.length > 3) {
+        html += '<span class="more">+' + (evs.length - 2) + " more</span>";
+      }
+      html += "</td>";
+      cursor = new Date(cursor.getTime() + DAYMS);
+      /* DST-safe re-normalize */
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+    }
+    html += "</tr>";
+  }
+  document.getElementById("calbody").innerHTML = html;
+}
+
+/* ---------- render: countdown ---------- */
+
+function nextOccurrence(ev, from) {
+  if (!ev.repeat || ev.repeat === "none") {
+    var d = fromKey(ev.date);
+    return d.getTime() >= from.getTime() ? d : null;
+  }
+  var cursor = new Date(from.getTime());
+  for (var i = 0; i <= 732; i++) {
+    if (occursOn(ev, toKey(cursor))) return cursor;
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);
+  }
+  return null;
+}
+
+function renderCountdown() {
+  var from = today0();
+  var items = [];
+  for (var i = 0; i < gState.events.length; i++) {
+    var ev = gState.events[i];
+    if (!ev.countdown) continue;
+    var target = nextOccurrence(ev, from);
+    if (!target) continue;
+    items.push({ ev: ev, days: dayDiff(from, target), target: target });
+  }
+  items.sort(function (a, b) { return a.days - b.days; });
+  if (items.length > 4) items = items.slice(0, 4);
+
+  var el = document.getElementById("cdlist");
+  if (items.length === 0) {
+    el.innerHTML = '<span class="empty">No countdowns</span>';
+    return;
+  }
+  var html = "";
+  for (var j = 0; j < items.length; j++) {
+    var it = items[j];
+    var mon = MONTHS[it.target.getMonth()].substring(0, 3);
+    var day = it.target.getDate();
+    var when;
+    if (it.ev.allDay) {
+      when = mon + " " + day + ", All Day";
+    } else {
+      when = mon + " " + day + ", " + fmtTime(it.ev.startTime);
+      if (it.ev.endTime) when += "-" + fmtTime(it.ev.endTime);
+    }
+    html += '<div class="cditem">' +
+      '<div class="cdnum" style="color:' + esc(calColor(it.ev)) + '">' + it.days + "</div>" +
+      '<div class="cdunit">' + (it.days === 1 ? "day" : "days") + "</div>" +
+      '<div class="cdbody"><div class="cdtitle">' + esc(it.ev.title || "(untitled)") +
+      '</div><div class="cdwhen">' + when + "</div></div>" +
+      '<div class="clearfix"></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+/* ---------- render: upcoming (next 8 occurrences in 60 days) ---------- */
+
+function renderUpcoming() {
+  var from = today0();
+  var found = [];
+  var cursor = new Date(from.getTime());
+  for (var d = 0; d < 60 && found.length < 4; d++) {
+    var key = toKey(cursor);
+    var evs = eventsOn(key);
+    for (var i = 0; i < evs.length && found.length < 4; i++) {
+      found.push({ ev: evs[i], date: new Date(cursor.getTime()), days: d });
+    }
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);
+  }
+
+  var el = document.getElementById("uplist");
+  if (found.length === 0) {
+    el.innerHTML = '<span class="empty">No upcoming events</span>';
+    return;
+  }
+  var html = "";
+  for (var j = 0; j < found.length; j++) {
+    var f = found[j];
+    var mon = MONTHS[f.date.getMonth()].substring(0, 3);
+    var dayNum = f.date.getDate();
+    var when;
+    if (f.ev.allDay) {
+      when = mon + " " + dayNum + ", All Day";
+    } else {
+      when = mon + " " + dayNum + ", " + fmtTime(f.ev.startTime);
+      if (f.ev.endTime) when += "-" + fmtTime(f.ev.endTime);
+    }
+    var color = calColor(f.ev);
+    html += '<div class="cditem">' +
+      '<div class="cdnum" style="color:' + esc(color) + '">' + dayNum + "</div>" +
+      '<div class="cdunit">' + esc(mon) + "</div>" +
+      '<div class="cdbody"><div class="cdtitle">' + esc(f.ev.title || "(untitled)") +
+      '</div><div class="cdwhen">' + when + "</div></div>" +
+      '<div class="clearfix"></div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderAll() {
+  renderMonth();
+  renderCountdown();
+  renderUpcoming();
+}
+
+/* ---------- clock ---------- */
+
+function renderClock() {
+  var n = new Date();
+  var h = n.getHours(), m = pad2(n.getMinutes());
+  var ap = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  document.getElementById("clock").innerHTML = h + ":" + m + " " + ap;
+}
+
+/* ---------- data fetch (XHR — old TVs lack fetch) ---------- */
+
+var gLastRenderDay = "";
+
+function poll() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/api/tv-state", true);
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState !== 4) return;
+    var err = document.getElementById("err");
+    if (xhr.status === 200) {
+      err.style.display = "none";
+      try {
+        var data = JSON.parse(xhr.responseText);
+        var dayNow = toKey(today0());
+        if (data.version !== gState.version || dayNow !== gLastRenderDay) {
+          gState = data;
+          gLastRenderDay = dayNow;
+          renderAll();
+        }
+      } catch (e) { /* keep showing last good render */ }
+    } else {
+      err.style.display = "block";
+    }
+  };
+  try { xhr.send(null); } catch (e) {
+    document.getElementById("err").style.display = "block";
+  }
+}
+
+renderClock();
+renderAll();
+poll();
+setInterval(poll, 5000);         /* data every 5s (matches desktop sync) */
+setInterval(renderClock, 15000); /* clock every 15s */
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+/* Modern minimal reset */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+input, select, textarea { font: inherit; color: inherit; }
+ul { list-style: none; padding: 0; }
+h1, h2, h3, h4 { font-weight: 500; }
+
+::selection { background: var(--accent); color: var(--surface); }
+
+/* `hidden` attribute should always win over display: flex/grid/etc. */
+[hidden] { display: none !important; }

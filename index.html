@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <!-- When added to a phone home screen, run as a standalone web app -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Calendar" />
+  <title>Calendar</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Geist:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Styles (split for maintainability) -->
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+  <link rel="stylesheet" href="css/calendar.css" />
+  <link rel="stylesheet" href="css/upcoming.css" />
+  <link rel="stylesheet" href="css/countdown.css" />
+  <link rel="stylesheet" href="css/modal.css" />
+  <link rel="stylesheet" href="css/login.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__top">
+        <button class="icon-btn icon-btn--theme" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
+          <span class="icon-sun">☼</span>
+          <span class="icon-moon">☾</span>
+        </button>
+        <button class="icon-btn" id="export-btn" title="Export .ics" aria-label="Export calendar">
+          <span aria-hidden="true">↑</span>
+        </button>
+        <button class="icon-btn" id="import-btn" title="Import .ics" aria-label="Import calendar">
+          <span aria-hidden="true">↓</span>
+        </button>
+        <input type="file" id="import-file" accept=".ics" hidden />
+        <button class="icon-btn icon-btn--logout" id="logout-btn" title="Log out" aria-label="Log out">
+          <span aria-hidden="true">⇥</span>
+        </button>
+      </div>
+
+      <!-- Countdown -->
+      <section class="countdown" id="countdown">
+        <div class="countdown__header">
+          <button class="countdown__toggle" id="countdown-toggle" aria-expanded="true">
+            <span class="countdown__chev" aria-hidden="true">▾</span>
+            <span class="countdown__title">Countdown</span>
+          </button>
+          <button class="countdown__show-all" id="countdown-show-all" title="Show all countdowns">All</button>
+        </div>
+        <ul class="countdown__list" id="countdown-list"></ul>
+      </section>
+
+      <!-- Upcoming events -->
+      <section class="upcoming" id="upcoming">
+        <div class="upcoming__header">
+          <button class="upcoming__toggle" id="upcoming-toggle" aria-expanded="true">
+            <span class="upcoming__chev" aria-hidden="true">▾</span>
+            <span class="upcoming__title">Upcoming</span>
+          </button>
+        </div>
+        <ul class="upcoming__list" id="upcoming-list"></ul>
+      </section>
+
+      <!-- Calendars dropdown -->
+      <section class="cal-list" id="cal-list">
+        <div class="cal-list__header">
+          <button class="cal-list__toggle" id="cal-list-toggle" aria-expanded="true">
+            <span class="cal-list__chev" aria-hidden="true">▾</span>
+            <span class="cal-list__title">Calendars</span>
+          </button>
+          <button class="cal-list__add" id="cal-add-btn" title="New calendar" aria-label="Add calendar">+</button>
+        </div>
+        <ul class="cal-list__items" id="cal-list-items"></ul>
+      </section>
+    </aside>
+
+    <!-- MAIN CALENDAR AREA -->
+    <main class="main">
+      <header class="cal-header">
+        <button class="hamburger" id="sidebar-toggle" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+          <span class="hamburger__bar"></span>
+          <span class="hamburger__bar"></span>
+          <span class="hamburger__bar"></span>
+        </button>
+        <div class="cal-header__nav">
+          <button class="nav-btn nav-btn--year" id="prev-year" aria-label="Previous year">⟪</button>
+          <button class="nav-btn nav-btn--month" id="prev-month" aria-label="Previous month">‹</button>
+          <h1 class="cal-header__title">
+            <span class="cal-header__month" id="header-month"></span>
+            <span class="cal-header__year" id="header-year"></span>
+          </h1>
+          <button class="nav-btn nav-btn--month" id="next-month" aria-label="Next month">›</button>
+          <button class="nav-btn nav-btn--year" id="next-year" aria-label="Next year">⟫</button>
+        </div>
+        <div class="cal-header__balance" aria-hidden="true"></div>
+      </header>
+
+      <div class="dow-row" id="dow-row"></div>
+      <div class="grid" id="grid"></div>
+    </main>
+  </div>
+
+  <!-- Countdown "Show All" modal -->
+  <div class="modal" id="countdown-modal" hidden>
+    <div class="modal__overlay" data-close></div>
+    <div class="modal__panel cd-modal__panel">
+      <button class="modal__close" data-close aria-label="Close">&times;</button>
+      <h2 class="cd-modal__title">All Countdowns</h2>
+      <ul class="cd-modal__list" id="cd-modal-list"></ul>
+    </div>
+  </div>
+
+  <!-- Sidebar backdrop (only visible when the drawer is open) -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+  <!-- DAY DETAIL MODAL (shown when "+N more" is clicked) -->
+  <div class="modal" id="day-modal" hidden>
+    <div class="modal__backdrop" data-close-day></div>
+    <div class="modal__panel modal__panel--day" role="dialog" aria-modal="true" aria-labelledby="day-modal-title">
+      <header class="day-modal__head">
+        <div class="day-modal__date">
+          <div class="day-modal__dow" id="day-modal-dow"></div>
+          <h2 class="day-modal__num" id="day-modal-title"></h2>
+          <div class="day-modal__mon" id="day-modal-mon"></div>
+        </div>
+        <button class="modal__close" data-close-day aria-label="Close">✕</button>
+      </header>
+      <div class="day-modal__body">
+        <ul class="day-modal__list" id="day-modal-list"></ul>
+        <button type="button" class="btn btn--ghost day-modal__add" id="day-modal-add">+ Add event</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVENT MODAL -->
+  <div class="modal" id="modal" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <header class="modal__head">
+        <h2 id="modal-title" class="modal__title">New event</h2>
+        <button class="modal__close" data-close aria-label="Close">✕</button>
+      </header>
+
+      <form class="modal__form" id="event-form">
+        <label class="field">
+          <span class="field__label">Title</span>
+          <input type="text" id="f-title" required />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Date</span>
+          <input type="date" id="f-date" required />
+        </label>
+
+        <label class="field field--inline">
+          <input type="checkbox" id="f-allday" />
+          <span>All day</span>
+        </label>
+
+        <div class="field-row" id="time-row">
+          <label class="field">
+            <span class="field__label">Start</span>
+            <input type="time" id="f-start" />
+          </label>
+          <label class="field">
+            <span class="field__label">End</span>
+            <input type="time" id="f-end" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Repeat</span>
+          <select id="f-repeat">
+            <option value="none">Does not repeat</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Every 2 weeks</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </label>
+
+        <div id="repeat-count-row" class="field-row" hidden>
+          <label class="field">
+            <span class="field__label">Ends</span>
+            <select id="f-repeat-end">
+              <option value="forever">Never (indefinitely)</option>
+              <option value="count">After a number of times</option>
+            </select>
+          </label>
+          <label class="field" id="repeat-count-field" hidden>
+            <span class="field__label">Times</span>
+            <input type="number" id="f-repeat-count" min="2" max="999" value="10" />
+          </label>
+        </div>
+
+        <label class="field field--inline">
+          <input type="checkbox" id="f-countdown" />
+          <span>Show countdown in sidebar</span>
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span class="field__label">Calendar</span>
+            <select id="f-calendar"></select>
+          </label>
+          <label class="field">
+            <span class="field__label">Color</span>
+            <div class="swatches" id="f-color-swatches"></div>
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Location</span>
+          <input type="text" id="f-location" placeholder="Add a place" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Description</span>
+          <textarea id="f-description" rows="3" placeholder="Add notes…"></textarea>
+        </label>
+
+        <footer class="modal__foot">
+          <button type="button" class="btn btn--ghost" id="delete-btn" hidden>Delete</button>
+          <div class="modal__foot-right">
+            <button type="button" class="btn btn--ghost" data-close>Cancel</button>
+            <button type="submit" class="btn btn--primary">Save</button>
+          </div>
+        </footer>
+      </form>
+
+      <!-- Delete confirmation overlay (slides over the form) -->
+      <div class="modal__confirm" id="delete-confirm" hidden>
+        <h3 class="modal__confirm-title" id="confirm-title">Delete event?</h3>
+        <p class="modal__confirm-msg" id="confirm-msg"></p>
+        <div class="modal__confirm-buttons">
+          <button type="button" class="btn btn--ghost" id="confirm-cancel">Cancel</button>
+          <button type="button" class="btn btn--ghost" id="confirm-instance" hidden>Just this one</button>
+          <button type="button" class="btn btn--danger" id="confirm-series">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modules: load order matters; app.js orchestrates -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
