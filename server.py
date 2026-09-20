@@ -49,7 +49,7 @@ import hashlib
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 ROOT = Path(__file__).resolve().parent
 DATA_DIR = ROOT / "data"          # holds the single shared-calendar file
@@ -316,7 +316,9 @@ class Handler(BaseHTTPRequestHandler):
             return self._text(400, "Invalid JSON")
 
         if path.startswith("/api/events/"):
-            ev_id = path[len("/api/events/"):]
+            # IDs can contain URL-significant chars (e.g. '@' on imported
+            # events); clients percent-encode them, so decode before matching.
+            ev_id = unquote(path[len("/api/events/"):])
             with _lock:
                 store = get_store(login)
                 for i, ev in enumerate(store["events"]):
@@ -331,7 +333,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._text(404, "Event not found")
 
         if path.startswith("/api/calendars/"):
-            cal_id = path[len("/api/calendars/"):]
+            cal_id = unquote(path[len("/api/calendars/"):])
             with _lock:
                 store = get_store(login)
                 for i, c in enumerate(store["calendars"]):
@@ -356,7 +358,7 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         if path.startswith("/api/events/"):
-            ev_id = path[len("/api/events/"):]
+            ev_id = unquote(path[len("/api/events/"):])
             with _lock:
                 store = get_store(login)
                 before = len(store["events"])
@@ -368,7 +370,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(200, {"version": store["version"]})
 
         if path.startswith("/api/calendars/"):
-            cal_id = path[len("/api/calendars/"):]
+            cal_id = unquote(path[len("/api/calendars/"):])
             with _lock:
                 store = get_store(login)
                 before = len(store["calendars"])
