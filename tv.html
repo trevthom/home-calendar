@@ -22,7 +22,7 @@ html, body {
   overflow: hidden;
 }
 
-#wrap { padding: 18px 24px 14px; height: 100%; box-sizing: border-box; }
+#wrap { position: relative; padding: 18px 0 14px; height: 100%; box-sizing: border-box; }
 
 /* ---- header (inside leftcol, spans calendar width only) ---- */
 #hdr { width: 100%; margin-bottom: 8px; }
@@ -41,16 +41,25 @@ html, body {
 }
 #clock .dt { font-size: 16px; color: #8a8275; }
 
-/* ---- two-column shell: calendar left, lists right ---- */
-#shell { width: 100%; border-collapse: collapse; }
+/* ---- two-column shell: calendar left (75%), lists right (25%) ----
+   Row 1 holds the month/year + clock header (calendar width only);
+   row 2 gets all remaining height. The header cells carry the column
+   widths (table-layout:fixed takes widths from the first row) and
+   height:1px so the second row absorbs the leftover viewport height.
+   All CSS2.1-era, old-WebKit-safe. */
+#shell { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
 #shell > tbody > tr > td { vertical-align: top; }
-#leftcol  { width: 74%; padding-right: 22px; }
-#rightcol { width: 26%; }
+#shell > tbody > tr:first-child > td:first-child { width: 75%; height: 1px; padding-left: 24px; padding-right: 22px; }
+#shell > tbody > tr:first-child > td:last-child  { width: 25%; height: 1px; padding-right: 24px; }
+#leftcol  { padding-left: 24px; padding-right: 22px; }
+#rightcol { padding-right: 24px; }
 
-/* ---- month grid ---- */
+/* ---- month grid: stretches to fill the remaining screen height ---- */
 #cal {
   width: 100%;
+  height: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   background-color: #fffbf2;
   border: 1px solid #c9bfa9;
 }
@@ -67,10 +76,11 @@ html, body {
 #cal td {
   border: 1px solid #ddd5c5;
   width: 14.28%;
-  height: 66px;
+  height: 62px;   /* minimum; rows stretch to share the full height */
   vertical-align: top;
-  padding: 5px 6px;
+  padding: 4px 6px;
   background-color: #fffbf2;
+  overflow: hidden;
 }
 #cal td.other { background-color: #efeadd; }
 #cal td.today { background-color: #f6ddd6; border: 2px solid #c84a31; }
@@ -178,39 +188,51 @@ td.today .dnum { color: #c84a31; font-weight: bold; }
   color: #8a8275;
   font-style: italic;
 }
+/* error notice floats over the layout so it never adds scroll height */
 #err {
   display: none;
+  position: absolute;
+  left: 24px;
+  bottom: 8px;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
   color: #c84a31;
-  margin-top: 10px;
+  background-color: #f5f1e8;
+  padding: 2px 0;
 }
 </style>
 </head>
 <body>
 <div id="wrap">
-  <table id="shell"><tbody><tr>
-    <td id="leftcol">
-      <table id="hdr"><tbody><tr>
-        <td><span id="title">Calendar</span></td>
-        <td id="clock"></td>
-      </tr></tbody></table>
+  <table id="shell"><tbody>
+    <tr>
+      <td>
+        <table id="hdr"><tbody><tr>
+          <td><span id="title">Calendar</span></td>
+          <td id="clock"></td>
+        </tr></tbody></table>
+      </td>
+      <td></td>
+    </tr>
+    <tr>
+      <td id="leftcol">
       <table id="cal"><thead><tr>
         <th>SUN</th><th>MON</th><th>TUE</th><th>WED</th><th>THU</th><th>FRI</th><th>SAT</th>
       </tr></thead><tbody id="calbody"></tbody></table>
-      <div id="err">Can't reach the calendar server. Retrying…</div>
-    </td>
-    <td id="rightcol">
-      <div class="panel">
-        <h2>Countdown</h2>
-        <div id="cdlist"><span class="empty">No countdowns</span></div>
-      </div>
-      <div class="panel">
-        <h2>Upcoming</h2>
-        <div id="uplist"><span class="empty">No upcoming events</span></div>
-      </div>
-    </td>
-  </tr></tbody></table>
+      </td>
+      <td id="rightcol">
+        <div class="panel">
+          <h2>Countdown</h2>
+          <div id="cdlist"><span class="empty">No countdowns</span></div>
+        </div>
+        <div class="panel">
+          <h2>Upcoming</h2>
+          <div id="uplist"><span class="empty">No upcoming events</span></div>
+        </div>
+      </td>
+    </tr>
+  </tbody></table>
+  <div id="err">Can't reach the calendar server. Retrying…</div>
 </div>
 
 <script>
@@ -398,7 +420,7 @@ function renderCountdown() {
     items.push({ ev: ev, days: dayDiff(from, target), target: target });
   }
   items.sort(function (a, b) { return a.days - b.days; });
-  if (items.length > 4) items = items.slice(0, 4);
+  if (items.length > 5) items = items.slice(0, 5);  /* max 5 on screen */
 
   var el = document.getElementById("cdlist");
   if (items.length === 0) {
@@ -427,16 +449,16 @@ function renderCountdown() {
   el.innerHTML = html;
 }
 
-/* ---------- render: upcoming (next 8 occurrences in 60 days) ---------- */
+/* ---------- render: upcoming (next 3 occurrences in 60 days) ---------- */
 
 function renderUpcoming() {
   var from = today0();
   var found = [];
   var cursor = new Date(from.getTime());
-  for (var d = 0; d < 60 && found.length < 4; d++) {
+  for (var d = 0; d < 60 && found.length < 3; d++) {
     var key = toKey(cursor);
     var evs = eventsOn(key);
-    for (var i = 0; i < evs.length && found.length < 4; i++) {
+    for (var i = 0; i < evs.length && found.length < 3; i++) {
       found.push({ ev: evs[i], date: new Date(cursor.getTime()), days: d });
     }
     cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + 1);
