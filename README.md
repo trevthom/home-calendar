@@ -87,6 +87,12 @@ exact same moment, that's fine.
 
 Or just leave a terminal open. For a home calendar this is fine.
 
+`server.py` frees its port the moment it stops (Ctrl+C, closing the
+terminal, or a machine shutdown), and waits briefly at startup for a
+just-closed socket to release, so a restart doesn't fail with "Address
+already in use". If the port is still busy, an older copy is probably
+still running — see the troubleshooting note in `HOME-SERVER.md`.
+
 ### Backups
 
 Copy `data.json` somewhere safe. That's the whole database. The

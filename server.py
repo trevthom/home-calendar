@@ -44,7 +44,11 @@ import json
 import os
 import re
 import sys
+import errno
 import hmac
+import signal
+import socket
+import time
 import hashlib
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -417,7 +421,6 @@ class Handler(BaseHTTPRequestHandler):
 
 def _lan_ip():
     """Best-effort detection of this machine's LAN IP (no traffic is sent)."""
-    import socket
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         s.connect(("8.8.8.8", 80))   # never actually transmits (UDP, no send)
@@ -426,6 +429,118 @@ def _lan_ip():
         return None
     finally:
         s.close()
+
+
+# ------------------------------------------------------- server lifecycle ----
+#
+# The port must be free the moment the app stops, or the next start fails with
+# the classic "[Errno 98] Address already in use". Three things make that
+# reliable:
+#   1. SO_REUSEADDR is set before bind, so a socket the OS is still tearing
+#      down (TIME_WAIT, ~1 minute after the old process exits) can be re-bound
+#      immediately instead of blocking the next start.
+#   2. SIGINT/SIGTERM/SIGHUP all trigger a clean shutdown -- Ctrl+C, closing
+#      the terminal window, or the OS shutting the machine down -- which
+#      closes the listening socket and lets the process exit.
+#   3. If the port is somehow still busy at startup we wait and retry briefly
+#      instead of dying with a traceback.
+
+
+class CalendarHTTPServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer with prompt, reliable port release."""
+
+    allow_reuse_address = True   # re-bind over a socket stuck in TIME_WAIT
+    daemon_threads = True        # in-flight requests never block exit
+
+    def server_bind(self):
+        # Set SO_REUSEADDR *before* bind. The class flag normally does this,
+        # but doing it explicitly avoids surprises across Python versions.
+        try:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        except OSError:
+            pass
+        super().server_bind()
+
+
+def _is_addr_in_use(exc):
+    """True if an OSError raised by bind() means the port is taken."""
+    codes = {errno.EADDRINUSE}
+    wsa = getattr(errno, "WSAEADDRINUSE", None)
+    if wsa is not None:
+        codes.add(wsa)
+    if getattr(exc, "errno", None) in codes:
+        return True
+    return "address already in use" in str(exc).lower()
+
+
+def _existing_instance(host, port, timeout=0.4):
+    """Best-effort check: is this project's own server already on the port?"""
+    import http.client
+    probe = "127.0.0.1" if host in ("", "0.0.0.0", "::", "::0") else host
+    try:
+        conn = http.client.HTTPConnection(probe, port, timeout=timeout)
+        conn.request("GET", "/api/version")
+        resp = conn.getresponse()
+        server_hdr = resp.getheader("Server", "") or ""
+        resp.read()
+        conn.close()
+        return server_hdr.startswith("CalendarSync")
+    except OSError:
+        return False
+
+
+def _bind_server(host, port, wait_seconds=20.0):
+    """Create the HTTP server, waiting out a port that is still being freed."""
+    deadline = time.monotonic() + wait_seconds
+    waiting = False
+    while True:
+        try:
+            return CalendarHTTPServer((host, port), Handler)
+        except OSError as e:
+            if not _is_addr_in_use(e):
+                raise
+            # A previous copy of this app is genuinely still running. Don't
+            # bury the user in a traceback -- tell them it's already up.
+            if _existing_instance(host, port):
+                raise SystemExit(
+                    f"\nA calendar server is already running on {host}:{port}.\n"
+                    f"Open that one in your browser, or stop it (Ctrl+C in"
+                    f" its window,\n`pkill -f server.py` on Linux/macOS, Task"
+                    f" Manager on Windows)\nand then start again.\n"
+                )
+            if time.monotonic() >= deadline:
+                raise SystemExit(
+                    f"\nPort {port} is still in use after waiting "
+                    f"{wait_seconds:.0f}s.\n"
+                    f"Another program on this machine is holding it. Find it"
+                    f" (Linux/macOS:\n  lsof -i :{port}   --   Windows:  netstat"
+                    f" -ano | findstr :{port})\nand stop it, then try again.\n"
+                )
+            if not waiting:
+                print(
+                    f"Port {port} is busy; waiting for it to free up...",
+                    file=sys.stderr,
+                )
+                waiting = True
+            time.sleep(0.5)
+
+
+def _install_signal_handlers(httpd):
+    """Shut down cleanly (and free the port) on Ctrl+C / SIGTERM / SIGHUP."""
+
+    def _handle(_signum, _frame):
+        # shutdown() must be called from a different thread than the one
+        # running serve_forever(), so hand it off and let the loop return.
+        threading.Thread(target=httpd.shutdown, daemon=True).start()
+
+    for name in ("SIGINT", "SIGTERM", "SIGHUP"):
+        sig = getattr(signal, name, None)
+        if sig is None:
+            continue  # e.g. SIGHUP doesn't exist on Windows
+        try:
+            signal.signal(sig, _handle)
+        except (ValueError, OSError):
+            pass  # not on the main thread, or unsupported by the platform
 
 
 def main():
@@ -442,7 +557,7 @@ def main():
     host = args.host
 
     DATA_DIR.mkdir(exist_ok=True)
-    httpd = ThreadingHTTPServer((host, port), Handler)
+    httpd = _bind_server(host, port)
 
     passcode_set = bool(os.environ.get("CALENDAR_PASSCODE"))
     lan_bound = host not in ("127.0.0.1", "localhost", "::1")
@@ -480,11 +595,17 @@ def main():
         print(f"NOTE: {FRONTEND_FILE} doesn't exist yet. Run `python3 build.py`.")
     print()
     print("Ctrl+C to stop.")
+
+    _install_signal_handlers(httpd)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down.")
+        pass
+    finally:
+        # Closing the server socket is what actually frees the port, so the
+        # next start (or a reboot) never hits "Address already in use".
         httpd.server_close()
+    print("\nShutting down.")
 
 
 if __name__ == "__main__":
