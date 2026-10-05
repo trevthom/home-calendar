@@ -182,5 +182,16 @@ including capitals. If you changed the variable, restart the server.
 
 **Everything stopped after a reboot** — set up the autostart service above.
 
+**"Address already in use" when restarting** — the server releases the port
+as soon as it stops: Ctrl+C, closing the terminal window, or the machine
+shutting down all close the listening socket, and startup waits a few
+seconds for a just-closed socket to finish releasing. If it still says the
+port is busy, an older copy of the server is still running (this is the
+usual cause when the app seemed to close but the process stayed alive):
+stop it with Ctrl+C in its window, `pkill -f server.py` on Linux/macOS, or
+Task Manager on Windows. If a *different* program owns the port, the error
+names the command to find it (`lsof -i :8765`, or on Windows
+`netstat -ano | findstr :8765`).
+
 **The URL changed** — your router reassigned the IP; set a DHCP
 reservation.
