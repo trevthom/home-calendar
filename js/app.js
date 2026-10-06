@@ -7,6 +7,8 @@
 //   1. UI modules render synchronously from this login's localStorage cache.
 //   2. initialSync() pulls /api/state for this login.
 //   3. startPolling() watches /api/version every 5s (+ on focus/visibility).
+//   4. initDayRoll() repaints when the local day changes (midnight / refocus),
+//      so an app left open overnight shows the correct "today" without a reload.
 
 import { initSidebar } from "./sidebar.js";
 import { initGrid } from "./grid.js";
@@ -14,6 +16,7 @@ import { initModal } from "./modal.js";
 import { initDayModal } from "./dayModal.js";
 import { initUpcoming } from "./upcoming.js";
 import { initCountdown } from "./countdown.js";
+import { initDayRoll } from "./dayRoll.js";
 
 import { getState, getServerVersion, replaceServerData } from "./state.js";
 import { initialSync, startPolling, onUnauthorized } from "./sync.js";
@@ -41,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSidebar();
   initCountdown();
   initUpcoming();
+  initDayRoll();
 
   initialSync(getState, replaceServerData);
 

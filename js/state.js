@@ -78,6 +78,17 @@ function emit() {
   _subs.forEach((fn) => fn(_state));
 }
 
+/**
+ * Re-render every subscriber without changing any data. This exists for the
+ * day-rollover watcher (dayRoll.js): "today" is derived from the clock at
+ * render time, not stored in state, so a new calendar day needs a repaint
+ * even though nothing in the store changed. Cheap and rare (once a day), so
+ * it just reuses the normal emit path.
+ */
+export function refresh() {
+  emit();
+}
+
 /* ---------- UI-only mutations (not synced) ---------- */
 /* `ui` is per-device: current month, sidebar collapsed state. Each user
    navigates independently; we never sync these to the server. */

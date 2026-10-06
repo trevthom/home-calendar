@@ -68,7 +68,10 @@ data, the frontend pushes it up. After that, every local mutation
 optimistically updates the UI, writes to `localStorage`, and fires a
 matching request to the backend. A 5-second poll of the cheap
 `/api/version` endpoint detects changes made on other devices and
-pulls the new snapshot.
+pulls the new snapshot. The view also repaints itself when the date
+rolls over at midnight — and when you return to a tab that was open
+overnight — so the highlighted "today" is always current without a
+manual reload.
 
 If the backend is unreachable, the app silently falls back to
 localStorage-only. You'll still be able to add and edit events; they
@@ -138,6 +141,7 @@ calendar-app/
     ├── grid.js             ← Month grid + month/year navigation.
     ├── modal.js            ← Event create / edit dialog.
     ├── dayModal.js         ← Day-detail dialog (opened by "+N more").
+    ├── dayRoll.js          ← Repaints "today" across midnight / tab refocus.
     ├── sidebar.js          ← Calendar list, theme toggle, import / export.
     └── upcoming.js         ← Next-10-events panel.
 ```
