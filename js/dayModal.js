@@ -6,6 +6,7 @@ import { $, clear, el, fromDateKey, formatTime, MONTHS, DAYS_FULL } from "./util
 import { getState, subscribe } from "./state.js";
 import { expandRange, eventColor } from "./events.js";
 import { openModal } from "./modal.js";
+import { openEventDetails } from "./eventDetails.js";
 
 const dayModal = () => $("#day-modal");
 
@@ -38,7 +39,7 @@ function renderEventsForDay(dateKey) {
       style: { "--up-color": color },
       onclick: () => {
         closeDayModal();
-        openModal({ mode: "edit", event: ev, date: dateKey });
+        openEventDetails({ event: ev, date: dateKey });
       },
     });
 

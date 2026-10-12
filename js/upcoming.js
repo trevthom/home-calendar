@@ -3,7 +3,7 @@
 import { $, clear, el, MONTHS, fromDateKey, formatTime } from "./utils.js";
 import { getState, subscribe, setUpcomingCollapsed } from "./state.js";
 import { getUpcoming, eventColor } from "./events.js";
-import { openModal } from "./modal.js";
+import { openEventDetails } from "./eventDetails.js";
 
 function renderUpcoming() {
   const list = $("#upcoming-list");
@@ -35,7 +35,7 @@ function renderUpcoming() {
     const item = el("li", {
       class: "up-item",
       style: { "--up-color": color },
-      onclick: () => openModal({ mode: "edit", event: ev, date: ev.instanceDate }),
+      onclick: () => openEventDetails({ event: ev, date: ev.instanceDate }),
     });
 
     item.append(

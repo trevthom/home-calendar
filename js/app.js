@@ -13,6 +13,7 @@
 import { initSidebar } from "./sidebar.js";
 import { initGrid } from "./grid.js";
 import { initModal } from "./modal.js";
+import { initEventDetails } from "./eventDetails.js";
 import { initDayModal } from "./dayModal.js";
 import { initUpcoming } from "./upcoming.js";
 import { initCountdown } from "./countdown.js";
@@ -40,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Order is significant: modal must exist before grid (grid opens it on cell click).
   initModal();
   initDayModal();
+  initEventDetails();
   initGrid();
   initSidebar();
   initCountdown();

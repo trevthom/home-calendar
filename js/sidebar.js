@@ -153,7 +153,8 @@ function initDrawer() {
     if (sidebar.dataset.open !== "true") return;
     const eventModalOpen = !$("#modal").hasAttribute("hidden");
     const dayModalOpen = !$("#day-modal").hasAttribute("hidden");
-    if (eventModalOpen || dayModalOpen) return;
+    const detailsModalOpen = !$("#details-modal").hasAttribute("hidden");
+    if (eventModalOpen || dayModalOpen || detailsModalOpen) return;
     setOpen(false);
   });
 

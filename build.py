@@ -30,6 +30,7 @@ JS_ORDER = [
     "js/events.js",
     "js/ics.js",
     "js/modal.js",
+    "js/eventDetails.js",
     "js/dayModal.js",
     "js/dayRoll.js",
     "js/grid.js",

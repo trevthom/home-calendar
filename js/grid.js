@@ -7,6 +7,7 @@ import {
 import { getState, subscribe, setView } from "./state.js";
 import { expandRange, groupByDate, eventColor } from "./events.js";
 import { openModal } from "./modal.js";
+import { openEventDetails } from "./eventDetails.js";
 import { openDayModal } from "./dayModal.js";
 
 // MAX_ROWS = total visible rows in a cell (chips + optional "+N more").
@@ -82,7 +83,7 @@ function renderGrid() {
         title: ev.title,
         onclick: (e) => {
           e.stopPropagation();
-          openModal({ mode: "edit", event: ev, date: key });
+          openEventDetails({ event: ev, date: key });
         },
       });
       if (!ev.allDay && ev.startTime) {

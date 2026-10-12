@@ -149,6 +149,22 @@
     </div>
   </div>
 
+  <!-- EVENT DETAILS MODAL (read-only; its Edit button opens the edit modal) -->
+  <div class="modal" id="details-modal" hidden>
+    <div class="modal__backdrop" data-close-details></div>
+    <div class="modal__panel modal__panel--details" role="dialog" aria-modal="true" aria-labelledby="details-title">
+      <header class="modal__head">
+        <h2 id="details-title" class="modal__title"></h2>
+        <button class="modal__close" data-close-details aria-label="Close">✕</button>
+      </header>
+      <div class="details__body" id="details-body"></div>
+      <footer class="modal__foot details__foot">
+        <button type="button" class="btn btn--ghost" data-close-details>Close</button>
+        <button type="button" class="btn btn--primary" id="details-edit">Edit</button>
+      </footer>
+    </div>
+  </div>
+
   <!-- EVENT MODAL -->
   <div class="modal" id="modal" hidden>
     <div class="modal__backdrop" data-close></div>

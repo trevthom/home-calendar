@@ -8,6 +8,7 @@ import { $, clear, el, MONTHS, fromDateKey, formatTime } from "./utils.js";
 import { getState, subscribe, setCountdownCollapsed } from "./state.js";
 import { getCountdownEvents, eventColor } from "./events.js";
 import { openModal } from "./modal.js";
+import { openEventDetails } from "./eventDetails.js";
 
 /** Format the "when" line: "Aug 24, 11:00 AM-11:30 AM" or "Sep 3, All Day". */
 function whenLabel(ev) {
@@ -99,7 +100,7 @@ function renderCountdown() {
     const item = el("li", {
       class: "cd-item",
       style: { "--cd-color": color },
-      onclick: () => openModal({ mode: "edit", event: ev, date: ev.targetDate }),
+      onclick: () => openEventDetails({ event: ev, date: ev.targetDate }),
     });
 
     const big = ev.daysUntil === 0 ? "0" : String(ev.daysUntil);
