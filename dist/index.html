@@ -486,9 +486,13 @@ h1, h2, h3, h4 { font-weight: 500; }
   transition: background 160ms var(--ease), border-color 160ms var(--ease),
               transform 120ms var(--ease);
 }
-.cal-header__today:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+/* Hover only on devices that can really hover. On touch screens :hover
+   sticks after a tap and the badge would stay highlighted. */
+@media (hover: hover) {
+  .cal-header__today:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
 }
 .cal-header__today:active { transform: scale(0.94); }
 
