@@ -388,3 +388,6 @@
   padding: var(--sp-3) var(--sp-5) var(--sp-4);
   justify-content: flex-end;
 }
+
+/* Import choice: let the three buttons wrap on narrow screens */
+.import__foot { flex-wrap: wrap; }

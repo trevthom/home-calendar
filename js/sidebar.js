@@ -4,7 +4,7 @@ import { $, clear, el } from "./utils.js";
 import {
   getState, subscribe,
   addCalendar, deleteCalendar, toggleCalendarVisibility,
-  setCalendarsCollapsed, replaceData,
+  setCalendarsCollapsed, replaceData, mergeData,
 } from "./state.js";
 import { loadTheme, saveTheme } from "./storage.js";
 import { downloadICS, importICS } from "./ics.js";
@@ -101,19 +101,45 @@ function initImportExport() {
   $("#import-file").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!confirm("Importing will replace all current events. Continue?")) {
-      e.target.value = "";
-      return;
-    }
-    const text = await file.text();
     try {
-      const data = importICS(text);
-      replaceData(data);
+      const data = importICS(await file.text());
+      const mode = await askImportMode(data.events.length);
+      if (mode === "replace") {
+        replaceData(data);
+      } else if (mode === "append") {
+        const { added, skipped } = mergeData(data);
+        if (skipped) alert(`Added ${added} events. Skipped ${skipped} already in your calendar.`);
+      }
     } catch (err) {
       alert("Could not import .ics file: " + err.message);
     } finally {
       e.target.value = "";
     }
+  });
+}
+
+/** Show the import dialog. Resolves "replace", "append" or null (cancel). */
+function askImportMode(count) {
+  const modal = $("#import-modal");
+  $("#import-summary").textContent =
+    `This file has ${count} event${count === 1 ? "" : "s"}.`;
+  modal.hidden = false;
+  $("#import-append").focus();
+  return new Promise((resolve) => {
+    const done = (mode) => {
+      modal.hidden = true;
+      modal.removeEventListener("click", onClick);
+      document.removeEventListener("keydown", onKey);
+      resolve(mode);
+    };
+    const onClick = (e) => {
+      if (e.target.id === "import-replace") done("replace");
+      else if (e.target.id === "import-append") done("append");
+      else if (e.target.dataset.closeImport !== undefined) done(null);
+    };
+    const onKey = (e) => { if (e.key === "Escape") done(null); };
+    modal.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKey);
   });
 }
 
@@ -153,7 +179,8 @@ function initDrawer() {
     if (sidebar.dataset.open !== "true") return;
     const eventModalOpen = !$("#modal").hasAttribute("hidden");
     const dayModalOpen = !$("#day-modal").hasAttribute("hidden");
-    const detailsModalOpen = !$("#details-modal").hasAttribute("hidden");
+    const detailsModalOpen = !$("#details-modal").hasAttribute("hidden")
+      || !$("#import-modal").hasAttribute("hidden");
     if (eventModalOpen || dayModalOpen || detailsModalOpen) return;
     setOpen(false);
   });

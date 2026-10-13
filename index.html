@@ -149,6 +149,26 @@
     </div>
   </div>
 
+  <!-- IMPORT CHOICE MODAL (replace vs append) -->
+  <div class="modal" id="import-modal" hidden>
+    <div class="modal__backdrop" data-close-import></div>
+    <div class="modal__panel modal__panel--details" role="dialog" aria-modal="true" aria-labelledby="import-title">
+      <header class="modal__head">
+        <h2 id="import-title" class="modal__title">Import calendar</h2>
+        <button class="modal__close" data-close-import aria-label="Close">✕</button>
+      </header>
+      <div class="details__body">
+        <p class="details__value" id="import-summary"></p>
+        <p class="details__value">Replace your current events, or add the new ones to them?</p>
+      </div>
+      <footer class="modal__foot details__foot import__foot">
+        <button type="button" class="btn btn--ghost" data-close-import>Cancel</button>
+        <button type="button" class="btn btn--danger" id="import-replace">Replace existing</button>
+        <button type="button" class="btn btn--primary" id="import-append">Add to existing</button>
+      </footer>
+    </div>
+  </div>
+
   <!-- EVENT DETAILS MODAL (read-only; its Edit button opens the edit modal) -->
   <div class="modal" id="details-modal" hidden>
     <div class="modal__backdrop" data-close-details></div>

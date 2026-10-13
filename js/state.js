@@ -215,6 +215,38 @@ export function replaceData({ calendars, events }) {
   pushReplace({ calendars: nextCalendars, events: nextEvents });
 }
 
+/**
+ * Append imported data to the current calendar. Imported calendars that
+ * match an existing one by id or name reuse it (no duplicate calendars).
+ * Imported events whose id already exists are skipped, so importing the
+ * same file twice does not double everything.
+ * Returns { added, skipped } event counts.
+ */
+export function mergeData({ calendars, events }) {
+  const nextCalendars = [..._state.calendars];
+  const calMap = new Map(); // imported calendar id -> id to use
+  for (const c of calendars || []) {
+    const match = nextCalendars.find((x) => x.id === c.id || x.name === c.name);
+    if (match) {
+      calMap.set(c.id, match.id);
+    } else {
+      nextCalendars.push(c);
+      calMap.set(c.id, c.id);
+    }
+  }
+  const known = new Set(_state.events.map((e) => e.id));
+  const fresh = [];
+  for (const ev of events || []) {
+    if (known.has(ev.id)) continue;
+    fresh.push({ ...ev, calendarId: calMap.get(ev.calendarId) || ev.calendarId });
+  }
+  const nextEvents = [..._state.events, ...fresh];
+  _state = { ..._state, calendars: nextCalendars, events: nextEvents };
+  emit();
+  pushReplace({ calendars: nextCalendars, events: nextEvents });
+  return { added: fresh.length, skipped: (events || []).length - fresh.length };
+}
+
 /* ---------- Remote-driven update (from sync.js) ---------- */
 
 /**
