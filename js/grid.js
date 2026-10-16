@@ -107,8 +107,120 @@ function renderGrid() {
     cell.addEventListener("click", () => {
       openModal({ mode: "create", date: key });
     });
+    attachDayPeek(cell, key);
     grid.append(cell);
   }
+}
+
+let dayMenu = null; // the open right-click menu, if any
+
+function closeDayMenu() {
+  if (!dayMenu) return;
+  dayMenu.remove();
+  dayMenu = null;
+  document.removeEventListener("pointerdown", onOutsidePress, true);
+  document.removeEventListener("keydown", onMenuKey, true);
+  window.removeEventListener("resize", closeDayMenu);
+  window.removeEventListener("blur", closeDayMenu);
+  document.removeEventListener("scroll", closeDayMenu, true);
+}
+function onOutsidePress(e) {
+  if (dayMenu && !dayMenu.contains(e.target)) closeDayMenu();
+}
+function onMenuKey(e) {
+  if (e.key === "Escape") {
+    e.stopPropagation(); // close the menu only, not a drawer behind it
+    closeDayMenu();
+  }
+}
+
+/** Small right-click menu at (x, y) with one item: "See all events". */
+function showDayMenu(x, y, key) {
+  closeDayMenu();
+  const item = el("button", {
+    type: "button",
+    class: "ctx-menu__item",
+    role: "menuitem",
+    onclick: () => {
+      closeDayMenu();
+      openDayModal(key);
+    },
+  }, "See all events");
+  dayMenu = el("div", { class: "ctx-menu", role: "menu" }, item);
+  document.body.append(dayMenu);
+
+  // Keep the menu inside the viewport.
+  const { width, height } = dayMenu.getBoundingClientRect();
+  dayMenu.style.left = Math.max(4, Math.min(x, window.innerWidth - width - 4)) + "px";
+  dayMenu.style.top = Math.max(4, Math.min(y, window.innerHeight - height - 4)) + "px";
+
+  document.addEventListener("pointerdown", onOutsidePress, true);
+  document.addEventListener("keydown", onMenuKey, true);
+  window.addEventListener("resize", closeDayMenu);
+  window.addEventListener("blur", closeDayMenu);
+  document.addEventListener("scroll", closeDayMenu, true);
+  item.focus();
+}
+
+const LONG_PRESS_MS = 500;
+const LONG_PRESS_SLOP = 10; // px a finger may drift before it counts as a scroll
+
+/**
+ * Show the full day list for a cell: a right-click menu on desktop, or
+ * press-and-hold on touch. Works anywhere in the cell, chips included.
+ */
+function attachDayPeek(cell, key) {
+  let lastPointerType = "mouse";
+  cell.addEventListener("pointerdown", (e) => { lastPointerType = e.pointerType; }, true);
+
+  cell.addEventListener("contextmenu", (e) => {
+    e.preventDefault(); // no browser menu; also stops the touch callout
+    // A touch long-press can also fire contextmenu; the timer below handles it.
+    if (lastPointerType === "touch") return;
+    showDayMenu(e.clientX, e.clientY, key);
+  });
+
+  let timer = null;
+  let startX = 0;
+  let startY = 0;
+  const cancel = () => { clearTimeout(timer); timer = null; };
+
+  cell.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "touch") return;
+    startX = e.clientX;
+    startY = e.clientY;
+    cancel();
+    timer = setTimeout(() => {
+      timer = null;
+      openDayModal(key);
+      swallowNextClick();
+    }, LONG_PRESS_MS);
+  });
+  cell.addEventListener("pointermove", (e) => {
+    if (timer && Math.hypot(e.clientX - startX, e.clientY - startY) > LONG_PRESS_SLOP) cancel();
+  });
+  for (const type of ["pointerup", "pointercancel", "pointerleave"]) {
+    cell.addEventListener(type, cancel);
+  }
+}
+
+/**
+ * Lifting the finger after a long press fires a click. It must not add an
+ * event, open one, or close the day list that just opened (the list's
+ * backdrop sits under the finger). Drop that one click.
+ */
+function swallowNextClick() {
+  const stop = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    off();
+  };
+  const off = () => {
+    clearTimeout(expire);
+    document.removeEventListener("click", stop, true);
+  };
+  const expire = setTimeout(off, 1500); // finger never lifted as a click
+  document.addEventListener("click", stop, true);
 }
 
 /**

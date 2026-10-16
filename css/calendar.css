@@ -257,3 +257,37 @@
   filter: none;
   transform: none;
 }
+
+/* Long-press on a date opens the day list: stop text selection and the
+   iOS callout from competing with it. */
+.cell {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Right-click menu on a date cell */
+.ctx-menu {
+  position: fixed;
+  z-index: 200;
+  min-width: 160px;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+}
+.ctx-menu__item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 13px;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+}
+.ctx-menu__item:hover,
+.ctx-menu__item:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+}
